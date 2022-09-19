@@ -5,10 +5,12 @@ from Signatures import generate_keys, sign, verify
 from Transactions import Tx
 from cryptography.hazmat.primitives import serialization
 import pickle
+import time
 
 reward = 25.0
 
 class TxBlock (CBlock):
+    nonce = "AAAAAAA"
     def __init__(self, previousBlock) :
         super(TxBlock, self).__init__([],previousBlock)
     def addTx(self, Tx_in) :
@@ -32,6 +34,10 @@ class TxBlock (CBlock):
         if total_out - total_in - reward > 0.000000000001:
             return False
         return True
+    def good_nonce(self):
+        return False
+    def find_nonce(self):
+        return self.nonce
 
 if __name__ == "__main__" :
     pr1, pu1 = generate_keys()
@@ -84,6 +90,16 @@ if __name__ == "__main__" :
     Tx4.sign(pr1)
     Tx4.sign(pr3)
     B1.addTx(Tx4)
+    start = time.time()
+    print(B1.find_nonce())
+    elapsed = time.time() - start
+    print("elapsed time :" + str(elapsed) + " s.")
+    if elapsed < 60:
+        print("ERROR! Mining is too fast")
+    if B1.good_nonce():
+        print("Sucess! Nonce is good !")
+    else :
+        print("ERROR! Bad nonce")
 
     savefile = open("block.dat", "wb")
     pickle.dump(B1,savefile)
@@ -98,6 +114,11 @@ if __name__ == "__main__" :
         else :
             print("ERROR! Bad block")
 
+    if load_B1.good_nonce():
+        print("Sucess! Nonce is good after save and load!")
+    else :
+        print("ERROR! Bad nonce after save and load!")
+        
     B2 = TxBlock(B1)
     Tx5 = Tx()
     Tx5.add_input(pu3,1)
