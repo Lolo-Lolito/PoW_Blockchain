@@ -6,11 +6,12 @@ from Transactions import Tx
 from cryptography.hazmat.primitives import serialization
 import pickle
 import time
+import random
 
 reward = 25.0
+zeroHashNumber = 1
 
 class TxBlock (CBlock):
-    nonce = "AAAAAAA"
     def __init__(self, previousBlock) :
         super(TxBlock, self).__init__([],previousBlock)
     def addTx(self, Tx_in) :
@@ -35,8 +36,21 @@ class TxBlock (CBlock):
             return False
         return True
     def good_nonce(self):
-        return False
+        expectedHash = bytes("".join(['\x00' for i in range(zeroHashNumber)]),"utf-8")
+        print(expectedHash)
+        calculatedHash = super(TxBlock, self).computeHash()
+        print(calculatedHash)
+        for i in range(len(expectedHash)) :
+            if calculatedHash[i] != expectedHash[i] :
+                return False
+        return True
     def find_nonce(self):
+        nonceLength = 10
+        while True :
+            self.nonce = [chr(random.randint(1,0xFF)) for i in range(nonceLength)]
+            self.nonce = "".join(self.nonce)
+            if self.good_nonce() == True :
+                break
         return self.nonce
 
 if __name__ == "__main__" :
