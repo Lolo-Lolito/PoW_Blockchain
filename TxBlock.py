@@ -9,7 +9,7 @@ import time
 import random
 
 reward = 25.0
-zeroHashNumber = 1
+zeroHashNumber = 2
 
 class TxBlock (CBlock):
     def __init__(self, previousBlock) :
@@ -37,9 +37,7 @@ class TxBlock (CBlock):
         return True
     def good_nonce(self):
         expectedHash = bytes("".join(['\x00' for i in range(zeroHashNumber)]),"utf-8")
-        print(expectedHash)
         calculatedHash = super(TxBlock, self).computeHash()
-        print(calculatedHash)
         for i in range(len(expectedHash)) :
             if calculatedHash[i] != expectedHash[i] :
                 return False
@@ -77,6 +75,7 @@ if __name__ == "__main__" :
     newTx = pickle.load(loadfile)
 
     if newTx.is_valid():
+        
         print("Success ! Loaded Tx is valid")
         
     loadfile.close()
