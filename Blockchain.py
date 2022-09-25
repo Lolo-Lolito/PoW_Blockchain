@@ -12,7 +12,6 @@ class someClass:
     
 class CBlock:
     data = None
-    nonce = ''
     previousHash = None
     previousBlock = None
     def __init__(self, data, previousBlock):
@@ -23,7 +22,6 @@ class CBlock:
     def computeHash(self):
         digest = hashes.Hash(hashes.SHA256())
         digest.update(bytes(str(self.data),"utf-8"))
-        digest.update(bytes(str(self.nonce),"utf-8"))
         digest.update(bytes(str(self.previousHash),"utf-8"))
         computedHash = digest.finalize()
         return computedHash

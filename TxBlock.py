@@ -12,25 +12,29 @@ reward = 25.0
 zeroHashNumber = 2
 
 class TxBlock (CBlock):
+    nonce = "AAAAAAAAAA"
     def __init__(self, previousBlock) :
         super(TxBlock, self).__init__([],previousBlock)
+        self.data.insert(0, self.nonce)
     def addTx(self, Tx_in) :
         self.data.append(Tx_in)
     def __count_totals(self):
         total_in = 0
         total_out = 0
         for tx in self.data:
-            for addr, amt in tx.inputs:
-                total_in = total_in + amt
-            for addr, amt in tx.outputs:
-                total_out = total_out + amt     
+            if type(tx) == type(Tx()):
+                for addr, amt in tx.inputs:
+                    total_in = total_in + amt
+                for addr, amt in tx.outputs:
+                    total_out = total_out + amt     
         return total_in, total_out
     def is_valid(self):
         if not super(TxBlock, self).is_valid():
             return False
         for tx in self.data:
-            if not tx.is_valid():
-                return False
+            if type(tx) == type(Tx()):
+                if not tx.is_valid():
+                    return False
         total_in, total_out = self.__count_totals()
         if total_out - total_in - reward > 0.000000000001:
             return False
@@ -47,6 +51,7 @@ class TxBlock (CBlock):
         while True :
             self.nonce = [chr(random.randint(1,0xFF)) for i in range(nonceLength)]
             self.nonce = "".join(self.nonce)
+            self.data[0] = self.nonce
             if self.good_nonce() == True :
                 break
         return self.nonce
