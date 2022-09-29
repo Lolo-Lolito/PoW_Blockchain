@@ -4,54 +4,56 @@ from Blockchain import CBlock
 from Signatures import generate_keys, sign, verify
 from Transactions import Tx
 from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives import hashes
 import pickle
 import time
 import random
 
 reward = 25.0
 zeroHashNumber = 2
+nextCharLimit = 10
 
 class TxBlock (CBlock):
     nonce = "AAAAAAAAAA"
     def __init__(self, previousBlock) :
         super(TxBlock, self).__init__([],previousBlock)
-        self.data.insert(0, self.nonce)
     def addTx(self, Tx_in) :
         self.data.append(Tx_in)
     def __count_totals(self):
         total_in = 0
         total_out = 0
         for tx in self.data:
-            if type(tx) == type(Tx()):
-                for addr, amt in tx.inputs:
-                    total_in = total_in + amt
-                for addr, amt in tx.outputs:
-                    total_out = total_out + amt     
+            for addr, amt in tx.inputs:
+                total_in = total_in + amt
+            for addr, amt in tx.outputs:
+                total_out = total_out + amt     
         return total_in, total_out
     def is_valid(self):
         if not super(TxBlock, self).is_valid():
             return False
         for tx in self.data:
-            if type(tx) == type(Tx()):
-                if not tx.is_valid():
-                    return False
+            if not tx.is_valid():
+                return False
         total_in, total_out = self.__count_totals()
         if total_out - total_in - reward > 0.000000000001:
             return False
         return True
     def good_nonce(self):
         expectedHash = bytes("".join(['\x00' for i in range(zeroHashNumber)]),"utf-8")
-        calculatedHash = super(TxBlock, self).computeHash()
+        digest = hashes.Hash(hashes.SHA256())
+        digest.update(bytes(str(self.data),"utf-8"))
+        digest.update(bytes(str(self.nonce),"utf-8"))
+        digest.update(bytes(str(self.previousHash),"utf-8"))
+        calculatedHash = digest.finalize()
         for i in range(len(expectedHash)) :
             if calculatedHash[i] != expectedHash[i] :
                 return False
-        return True
+        return int(calculatedHash[zeroHashNumber]) < nextCharLimit
     def find_nonce(self):
         nonceLength = 10
         while True :
-            self.nonce = [chr(random.randint(1,0xFF)) for i in range(nonceLength)]
+            self.nonce = [chr(random.randint(0,0xFF)) for i in range(nonceLength)]
             self.nonce = "".join(self.nonce)
-            self.data[0] = self.nonce
             if self.good_nonce() == True :
                 break
         return self.nonce
