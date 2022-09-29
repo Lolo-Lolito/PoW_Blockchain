@@ -128,6 +128,8 @@ if __name__ == "__main__" :
     loadfile = open("block.dat", "rb")
     load_B1 = pickle.load(loadfile)
 
+    loadfile.close()
+
     for b in [root, B1, load_B1, load_B1.previousBlock]:
         if b.is_valid():
             print("Success ! Valid block")
