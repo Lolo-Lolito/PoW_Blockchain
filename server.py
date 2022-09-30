@@ -5,13 +5,20 @@ import socket
 import pickle
 
 TCP_PORT = 5005
+BUFFER_SIZE = 1024
 
 def recvObj(ip_addr):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind((ip_addr, TCP_PORT))
     s.listen()
     new_sock, addr = s.accept()
-    return pickle.loads(new_sock.recv(10000))
+    all_data = b''
+    while True:
+        data = new_sock.recv(BUFFER_SIZE)
+        if not data :
+            break
+        all_data = all_data + data
+    return pickle.loads(all_data)
 
 if __name__ == '__main__':
     newB = recvObj('localhost')
