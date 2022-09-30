@@ -7,11 +7,14 @@ import pickle
 TCP_PORT = 5005
 BUFFER_SIZE = 1024
 
-def recvObj(ip_addr):
+def newConnection(ip_addr):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind((ip_addr, TCP_PORT))
     s.listen()
-    new_sock, addr = s.accept()
+    return s
+
+def recvObj(socket):
+    new_sock, addr = socket.accept()
     all_data = b''
     while True:
         data = new_sock.recv(BUFFER_SIZE)
@@ -21,7 +24,8 @@ def recvObj(ip_addr):
     return pickle.loads(all_data)
 
 if __name__ == '__main__':
-    newB = recvObj('localhost')
+    s = newConnection('192.168.178.20')
+    newB = recvObj(s)
     print(newB.data[0])
     print(newB.data[1])
     if(newB.is_valid()):
@@ -52,4 +56,7 @@ if __name__ == '__main__':
         print("Success. Output value matches")
     else:
         print("Error! Wrong output value for block 1")
+
+    newTx = recvObj(s)
+    print(newTx)
     
