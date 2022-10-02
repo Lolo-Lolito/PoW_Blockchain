@@ -4,13 +4,13 @@ import socket
 import pickle
 import select
 
-TCP_PORT = 5005
+TCP_PORT_DEFAULT = 5005
 BUFFER_SIZE = 1024
 TIME_OUT = 10
 
-def newServerConnection(ip_addr):
+def newServerConnection(ip_addr, tcp_port = TCP_PORT_DEFAULT):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind((ip_addr, TCP_PORT))
+    s.bind((ip_addr, tcp_port))
     s.listen()
     return s
 
@@ -27,9 +27,9 @@ def recvObj(socket):
         return pickle.loads(all_data)
     return None
 
-def sendObj(ip_addr, inObj):
+def sendObj(ip_addr, inObj, tcp_port = TCP_PORT_DEFAULT):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((ip_addr, TCP_PORT))
+    s.connect((ip_addr, tcp_port))
     inObj_pickled = pickle.dumps(inObj)
     s.send(inObj_pickled)
     s.close()
