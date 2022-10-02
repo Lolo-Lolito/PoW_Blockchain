@@ -4,6 +4,7 @@ import SocketUtils
 import Transactions
 import Signatures
 
+head_blocks = [None]
 
 pr1, pu1 = Signatures.generate_keys()
 pr2, pu2 = Signatures.generate_keys()
@@ -46,3 +47,11 @@ for tx in newBlock.data:
         print("Tx1 is present")
     if tx == Tx2:
         print("Tx2 is present")
+
+for b in head_blocks:
+    if newBlock.previousHash == b.computeHash():
+            newBlock.previousBlock = b
+            head_blocks.remove(b)
+            head_blocks.append(newBlock)
+
+        

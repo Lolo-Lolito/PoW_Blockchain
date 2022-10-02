@@ -7,7 +7,21 @@ import Signatures
 
 wallet_list = ['localhost']
 tx_list = []
+head_blocks = [None]
 
+def findLongestBlockchain():
+    longest = -1
+    long_head = None
+    for b in head_blocks:
+        current = b
+        this_len = 0
+        while current != None :
+            this_len = this_len + 1
+            current = current.previousBlock
+        if this_len > longest :
+            long_head = b
+            longest = this_len
+    return long_head
 
 def minerServer(my_ip, wallet_list, my_public_addr):
     # Open server connection
@@ -21,7 +35,7 @@ def minerServer(my_ip, wallet_list, my_public_addr):
             break
     print("Tx1 and Tx2 have been received")
     # Collect into block
-    Block = TxBlock.TxBlock(None)
+    Block = TxBlock.TxBlock(findLongestBlockchain())
     for tx in tx_list : 
         Block.addTx(tx)
     print("Tx1 and Tx2 have been added into a new block")
@@ -41,6 +55,8 @@ def minerServer(my_ip, wallet_list, my_public_addr):
     # Send that block to each in wallet list
     for addr_ip in wallet_list :
         SocketUtils.sendObj(addr_ip, Block, 5006)
+    head_blocks.remove(Block.previousBlock)
+    head_blocks.append(Block)
     return False
 
 my_pr, my_pu = Signatures.generate_keys()
