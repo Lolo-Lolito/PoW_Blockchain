@@ -7,7 +7,7 @@ wallet_list = ['localhost']
 
 def minerServer(my_ip, wallet_list):
     # Open server connection
-    server = SocketUtils.newServerConnection(wallet_list[0])
+    server = SocketUtils.newServerConnection(my_ip)
     # Receive 2 transactions
     Tx1 = SocketUtils.recvObj(server)
     Tx2 = SocketUtils.recvObj(server)
@@ -21,7 +21,8 @@ def minerServer(my_ip, wallet_list):
     Block.find_nonce()
     print("Nonce has been found")
     # Send that block to each in wallet list
-    SocketUtils.sendObj(wallet_list[0], Block, 5006)
+    for addr_ip in wallet_list :
+        SocketUtils.sendObj(addr_ip, Block, 5006)
     return False
 
 if __name__ == '__main__':
