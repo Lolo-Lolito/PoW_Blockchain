@@ -10,7 +10,7 @@ import time
 import random
 
 reward = 25.0
-zeroHashNumber = 2
+zeroHashNumber = 1
 nextCharLimit = 10
 
 class TxBlock (CBlock):
@@ -19,7 +19,7 @@ class TxBlock (CBlock):
         super(TxBlock, self).__init__([],previousBlock)
     def addTx(self, Tx_in) :
         self.data.append(Tx_in)
-    def __count_totals(self):
+    def count_totals(self):
         total_in = 0
         total_out = 0
         for tx in self.data:
@@ -34,7 +34,7 @@ class TxBlock (CBlock):
         for tx in self.data:
             if not tx.is_valid():
                 return False
-        total_in, total_out = self.__count_totals()
+        total_in, total_out = self.count_totals()
         if total_out - total_in - reward > 0.000000000001:
             return False
         return True
