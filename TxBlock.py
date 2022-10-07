@@ -10,8 +10,8 @@ import time
 import random
 
 reward = 25.0
-zeroHashNumber = 1
-nextCharLimit = 10
+zeroHashNumber = 2
+nextCharLimit = 20
 
 class TxBlock (CBlock):
     nonce = "AAAAAAAAAA"
@@ -49,9 +49,9 @@ class TxBlock (CBlock):
             if calculatedHash[i] != expectedHash[i] :
                 return False
         return int(calculatedHash[zeroHashNumber]) < nextCharLimit
-    def find_nonce(self):
+    def find_nonce(self, n_iter):
         nonceLength = 10
-        while True :
+        for i in range(n_iter) :
             self.nonce = [chr(random.randint(0,0xFF)) for i in range(nonceLength)]
             self.nonce = "".join(self.nonce)
             if self.good_nonce() == True :
