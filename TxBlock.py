@@ -11,7 +11,7 @@ import random
 
 reward = 25.0
 zeroHashNumber = 2
-nextCharLimit = 20
+nextCharLimit = 40
 
 class TxBlock (CBlock):
     nonce = "AAAAAAAAAA"
