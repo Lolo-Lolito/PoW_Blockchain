@@ -13,7 +13,6 @@ miners = [('localhost', 5005)]
 
 
 def walletServer(my_addr):
-    return True
     server = SocketUtils.newServerConnection('localhost',5006)
     for i in range(10):
         newBlock = SocketUtils.recvObj(server)
@@ -25,9 +24,21 @@ def walletServer(my_addr):
             newBlock.previousBlock = b
             head_blocks.remove(b)
             head_blocks.append(newBlock)
+    return True
 
 def getBalance(pu_key):
-    return 0.0
+    currentBlock = Miner.findLongestBlockchain()
+    balance = 0.0
+    while currentBlock != None :
+        for tx in currentBlock.data :
+            for pu, amt in tx.inputs :
+                if pu == pu_key:
+                    balance = balance + amt
+            for pu, amt in tx.outputs :
+                if pu == pu_key :
+                    balance = balance + amt
+        currentBlock = currentBlock.previousBlock
+    return balance
 
 def sendCoins(pu_send, amt_send, pr_send, pu_recv, amt_recv, miner_list):
     return True
