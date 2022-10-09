@@ -13,12 +13,18 @@ miners = [('localhost', 5005)]
 
 
 def walletServer(my_addr):
+    global head_blocks
     server = SocketUtils.newServerConnection('localhost',5006)
     for i in range(10):
         newBlock = SocketUtils.recvObj(server)
         if newBlock :
+            print("New block has been received by walletServer ")
+            print(newBlock.data)
             break
     server.close()
+    if head_blocks == [None] :
+        head_blocks = [newBlock]
+        print("head blocks is empty, therefore newBlock has been append")
     for b in head_blocks:
         if newBlock.previousHash == b.computeHash():
             newBlock.previousBlock = b
@@ -33,7 +39,7 @@ def getBalance(pu_key):
         for tx in currentBlock.data :
             for pu, amt in tx.inputs :
                 if pu == pu_key:
-                    balance = balance + amt
+                    balance = balance - amt
             for pu, amt in tx.outputs :
                 if pu == pu_key :
                     balance = balance + amt
@@ -41,6 +47,13 @@ def getBalance(pu_key):
     return balance
 
 def sendCoins(pu_send, amt_send, pr_send, pu_recv, amt_recv, miner_list):
+    Tx = Transactions.Tx()
+    Tx.add_input(pu_send, amt_recv)
+    Tx.add_output(pu_recv, amt_recv)
+    Tx.sign(pr_send)
+    for addr_ip, port in miner_list :
+        print("Sending to " + addr_ip + ":" + str(port))
+        SocketUtils.sendObj(addr_ip, Tx, port)
     return True
 
 if __name__ == "__main__" :
@@ -66,7 +79,7 @@ if __name__ == "__main__" :
     sendCoins(pu1, 1.0, pr1, pu2, 1.0, miners)
     sendCoins(pu1, 1.0, pr1, pu3, 0.3, miners)
 
-    time.sleep(30)
+    time.sleep(120)
 
     #Query balances
     new1 = getBalance(pu1)
@@ -77,15 +90,15 @@ if __name__ == "__main__" :
     if abs(new1-bal1+1.3) > 0.00000001:
         print("Error: Wrong balance for pu1")
     else :
-        print("Success. Good balacne for pu1")
+        print("Success. Good balance for pu1")
     if abs(new2-bal2-1.0) > 0.00000001:
         print("Error: Wrong balance for pu2")
     else :
-        print("Success. Good balacne for pu2")
-    if abs(new1-bal1-0.3) > 0.00000001:
+        print("Success. Good balance for pu2")
+    if abs(new3-bal3-0.3) > 0.00000001:
         print("Error: Wrong balance for pu3")
     else :
-        print("Success. Good balacne for pu3")
+        print("Success. Good balance for pu3")
 
     Miner.break_now = True
     
