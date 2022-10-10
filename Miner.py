@@ -39,32 +39,35 @@ def minerServer(my_addr):
         newTx = SocketUtils.recvObj(server)
         if isinstance(newTx, Transactions.Tx) and newTx.is_valid:
             tx_list.append(newTx)
-            print("Received tx")
+            print("Miner : Received tx \n")
     return False
 
 def nonceFinder(wallet_list, my_public_addr):
     global break_now
+    global tx_list
     # Collect into block
     while not break_now :
         Block = TxBlock.TxBlock(findLongestBlockchain())
         for tx in tx_list : 
                 Block.addTx(tx)
+        tx_list = [tx for tx in tx_list if not tx in Block.data]
         # Calculation of miner reward
         total_in, total_out = Block.count_totals()
         minerRewardTx = Transactions.Tx()
         minerRewardTx.add_output(my_public_addr, 25.0 + total_in - total_out)
         Block.addTx(minerRewardTx)
         # Find nonce
-        print("Finding nonce...")
+        print("Miner : Finding nonce...\n")
         Block.find_nonce(100000)
         if Block.good_nonce():
-            print("Good nonce has been found")
+            print("Miner : Good nonce has been found\n")
             # Send that block to each in wallet list
             for addr_ip, port in wallet_list :
-                print("Sending to " + addr_ip + ":" + str(port))
+                print("Miner : Sending to " + addr_ip + ":" + str(port) + "\n")
                 SocketUtils.sendObj(addr_ip, Block, port)
             head_blocks.remove(Block.previousBlock)
             head_blocks.append(Block)
+            l_tx_list = tx_list
     return  True
 
 if __name__ == "__main__":

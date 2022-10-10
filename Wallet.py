@@ -10,26 +10,30 @@ import Miner
 head_blocks = [None]
 wallets = [('localhost', 5006)]
 miners = [('localhost', 5005)]
+break_now = False
 
 
 def walletServer(my_addr):
+    global break_now
     global head_blocks
     server = SocketUtils.newServerConnection('localhost',5006)
-    for i in range(10):
-        newBlock = SocketUtils.recvObj(server)
-        if newBlock :
-            print("New block has been received by walletServer ")
-            print(newBlock.data)
+    while not break_now :
+        while not break_now :
+            newBlock = SocketUtils.recvObj(server)
+            if newBlock :
+                print("Wallet : New block has been received by walletServer \n")
+                break
+        if break_now :
             break
+        if head_blocks == [None] :
+            head_blocks = [newBlock]
+            print("Wallet : head blocks is empty, therefore newBlock has been append \n")
+        for b in head_blocks:
+            if newBlock.previousHash == b.computeHash():
+                newBlock.previousBlock = b
+                head_blocks.remove(b)
+                head_blocks.append(newBlock)
     server.close()
-    if head_blocks == [None] :
-        head_blocks = [newBlock]
-        print("head blocks is empty, therefore newBlock has been append")
-    for b in head_blocks:
-        if newBlock.previousHash == b.computeHash():
-            newBlock.previousBlock = b
-            head_blocks.remove(b)
-            head_blocks.append(newBlock)
     return True
 
 def getBalance(pu_key):
@@ -52,7 +56,7 @@ def sendCoins(pu_send, amt_send, pr_send, pu_recv, amt_recv, miner_list):
     Tx.add_output(pu_recv, amt_recv)
     Tx.sign(pr_send)
     for addr_ip, port in miner_list :
-        print("Sending to " + addr_ip + ":" + str(port))
+        print("Wallet : Sending to " + addr_ip + ":" + str(port) + "\n")
         SocketUtils.sendObj(addr_ip, Tx, port)
     return True
 
@@ -79,7 +83,7 @@ if __name__ == "__main__" :
     sendCoins(pu1, 1.0, pr1, pu2, 1.0, miners)
     sendCoins(pu1, 1.0, pr1, pu3, 0.3, miners)
 
-    time.sleep(120)
+    time.sleep(60)
 
     #Query balances
     new1 = getBalance(pu1)
@@ -101,6 +105,7 @@ if __name__ == "__main__" :
         print("Success. Good balance for pu3")
 
     Miner.break_now = True
+    break_now = True
     
     t1.join()
     t2.join()
