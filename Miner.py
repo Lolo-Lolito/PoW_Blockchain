@@ -50,7 +50,6 @@ def nonceFinder(wallet_list, my_public_addr):
         Block = TxBlock.TxBlock(findLongestBlockchain())
         for tx in tx_list : 
                 Block.addTx(tx)
-        tx_list = [tx for tx in tx_list if not tx in Block.data]
         # Calculation of miner reward
         total_in, total_out = Block.count_totals()
         minerRewardTx = Transactions.Tx()
@@ -58,7 +57,7 @@ def nonceFinder(wallet_list, my_public_addr):
         Block.addTx(minerRewardTx)
         # Find nonce
         print("Miner : Finding nonce...\n")
-        Block.find_nonce(100000)
+        Block.find_nonce(10000)
         if Block.good_nonce():
             print("Miner : Good nonce has been found\n")
             # Send that block to each in wallet list
@@ -67,7 +66,7 @@ def nonceFinder(wallet_list, my_public_addr):
                 SocketUtils.sendObj(addr_ip, Block, port)
             head_blocks.remove(Block.previousBlock)
             head_blocks.append(Block)
-            l_tx_list = tx_list
+            tx_list = [tx for tx in tx_list if not tx in Block.data]
     return  True
 
 if __name__ == "__main__":
@@ -99,9 +98,9 @@ if __name__ == "__main__":
 
     try :
         SocketUtils.sendObj('localhost',Tx1)
-        print("Sent Tx1")
+        print("Wallet : Sent Tx1 \n")
         SocketUtils.sendObj('localhost',Tx2)
-        print("Sent Tx2")
+        print("Wallet : Sent Tx2 \n")
     except:
         print("Error: Connection unsuccessful")
 
