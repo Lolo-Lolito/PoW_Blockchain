@@ -125,7 +125,7 @@ if __name__ == "__main__" :
     Tx4.sign(pr3)
     B1.addTx(Tx4)
     start = time.time()
-    print(B1.find_nonce())
+    print(B1.find_nonce(1000000))
     elapsed = time.time() - start
     print("elapsed time :" + str(elapsed) + " s.")
     if elapsed < 60:

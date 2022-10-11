@@ -2,17 +2,17 @@
 
 import SocketUtils
 import Transactions
-import Signatures
-import time
-import threading
-import Miner
 import TxBlock
 
 head_blocks = [None]
 wallets = [('localhost', 5006)]
 miners = [('localhost', 5005)]
 break_now = False
+verbose = False
 
+def StopAll() :
+    global break_now
+    break_now = True
 
 def walletServer(my_addr):
     global break_now
@@ -21,13 +21,13 @@ def walletServer(my_addr):
     while not break_now :
         newBlock = SocketUtils.recvObj(server)
         if isinstance(newBlock, TxBlock.TxBlock) :
-            print("Wallet : New block has been received by walletServer \n")
+            if verbose : print("Wallet : New block has been received by walletServer \n")
             if head_blocks == [None] :
                 if not newBlock.is_valid():
                     print("Error! New block is invalid.")
                 else :
                     head_blocks = [newBlock]
-                    print("Wallet : head blocks is empty, therefore newBlock is head block \n")
+                    if verbose : print("Wallet : head blocks is empty, therefore newBlock is head block \n")
             for b in head_blocks:
                 if newBlock.previousHash == b.computeHash():
                     newBlock.previousBlock = b
@@ -59,12 +59,17 @@ def sendCoins(pu_send, amt_send, pr_send, pu_recv, amt_recv, miner_list):
     Tx.add_output(pu_recv, amt_recv)
     Tx.sign(pr_send)
     for addr_ip, port in miner_list :
-        print("Wallet : Sending to " + addr_ip + ":" + str(port) + "\n")
+        if verbose : print("Wallet : Sending to " + addr_ip + ":" + str(port) + "\n")
         SocketUtils.sendObj(addr_ip, Tx, port)
     return True
 
 if __name__ == "__main__" :
 
+    import time
+    import threading
+    import Miner
+    import Signatures
+        
     miner_pr, miner_pu = Signatures.generate_keys()
     t1 = threading.Thread(target = Miner.minerServer, args = (('localhost', 5005),))
     t2 = threading.Thread(target = Miner.nonceFinder, args = (wallets, miner_pu))
@@ -107,8 +112,8 @@ if __name__ == "__main__" :
     else :
         print("Success. Good balance for pu3")
 
-    Miner.break_now = True
-    break_now = True
+    Miner.StopAll()
+    StopAll()
     
     t1.join()
     t2.join()

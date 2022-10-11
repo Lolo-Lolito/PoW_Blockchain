@@ -3,15 +3,16 @@
 import SocketUtils
 import Transactions
 import TxBlock
-import Signatures
-import threading
-import time
-
 
 wallet_list = [('localhost', 5006)]
 tx_list = []
 head_blocks = [None]
 break_now = False
+verbose = False
+
+def StopAll() :
+    global break_now 
+    break_now = True
 
 def minerServer(my_addr):
     global tx_list
@@ -25,7 +26,7 @@ def minerServer(my_addr):
         newTx = SocketUtils.recvObj(server)
         if isinstance(newTx, Transactions.Tx) and newTx.is_valid:
             tx_list.append(newTx)
-            print("Miner : Received tx \n")
+            if verbose : print("Miner : Received tx \n")
     return False
 
 def nonceFinder(wallet_list, my_public_addr):
@@ -42,13 +43,13 @@ def nonceFinder(wallet_list, my_public_addr):
         minerRewardTx.add_output(my_public_addr, 25.0 + total_in - total_out)
         Block.addTx(minerRewardTx)
         # Find nonce
-        print("Miner : Finding nonce...\n")
+        if verbose : print("Miner : Finding nonce...\n")
         Block.find_nonce(10000)
         if Block.good_nonce():
-            print("Miner : Good nonce has been found\n")
+            if verbose : print("Miner : Good nonce has been found\n")
             # Send that block to each in wallet list
             for addr_ip, port in wallet_list :
-                print("Miner : Sending to " + addr_ip + ":" + str(port) + "\n")
+                if verbose : print("Miner : Sending to " + addr_ip + ":" + str(port) + "\n")
                 SocketUtils.sendObj(addr_ip, Block, port)
             head_blocks.remove(Block.previousBlock)
             head_blocks.append(Block)
@@ -57,6 +58,10 @@ def nonceFinder(wallet_list, my_public_addr):
 
 if __name__ == "__main__":
 
+    import threading
+    import time
+    import Signatures
+    
     my_pr, my_pu = Signatures.generate_keys()
     t1 = threading.Thread(target = minerServer, args = (('localhost', 5005),))
     t2 = threading.Thread(target = nonceFinder, args = (wallet_list, my_pu))
@@ -116,7 +121,7 @@ if __name__ == "__main__":
                 pass
 
     time.sleep(20)
-    break_now = True
+    StopAll()
     time.sleep(10)
     server.close()
     
