@@ -13,20 +13,6 @@ tx_list = []
 head_blocks = [None]
 break_now = False
 
-def findLongestBlockchain():
-    longest = -1
-    long_head = None
-    for b in head_blocks:
-        current = b
-        this_len = 0
-        while current != None :
-            this_len = this_len + 1
-            current = current.previousBlock
-        if this_len > longest :
-            long_head = b
-            longest = this_len
-    return long_head
-
 def minerServer(my_addr):
     global tx_list
     global break_now
@@ -47,7 +33,7 @@ def nonceFinder(wallet_list, my_public_addr):
     global tx_list
     # Collect into block
     while not break_now :
-        Block = TxBlock.TxBlock(findLongestBlockchain())
+        Block = TxBlock.TxBlock(TxBlock.findLongestBlockchain(head_blocks))
         for tx in tx_list : 
                 Block.addTx(tx)
         # Calculation of miner reward

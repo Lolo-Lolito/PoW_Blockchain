@@ -11,7 +11,7 @@ import random
 
 reward = 25.0
 zeroHashNumber = 2
-nextCharLimit = 40
+nextCharLimit = 200
 
 class TxBlock (CBlock):
     nonce = "AAAAAAAAAA"
@@ -57,6 +57,20 @@ class TxBlock (CBlock):
             if self.good_nonce() == True :
                 break
         return self.nonce
+
+def findLongestBlockchain(head_blocks):
+    longest = -1
+    long_head = None
+    for b in head_blocks:
+        current = b
+        this_len = 0
+        while current != None :
+            this_len = this_len + 1
+            current = current.previousBlock
+        if this_len > longest :
+            long_head = b
+            longest = this_len
+    return long_head
 
 if __name__ == "__main__" :
     pr1, pu1 = generate_keys()

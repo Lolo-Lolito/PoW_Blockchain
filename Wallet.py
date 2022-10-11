@@ -6,6 +6,7 @@ import Signatures
 import time
 import threading
 import Miner
+import TxBlock
 
 head_blocks = [None]
 wallets = [('localhost', 5006)]
@@ -18,26 +19,28 @@ def walletServer(my_addr):
     global head_blocks
     server = SocketUtils.newServerConnection('localhost',5006)
     while not break_now :
-        while not break_now :
-            newBlock = SocketUtils.recvObj(server)
-            if newBlock :
-                print("Wallet : New block has been received by walletServer \n")
-                break
-        if break_now :
-            break
-        if head_blocks == [None] :
-            head_blocks = [newBlock]
-            print("Wallet : head blocks is empty, therefore newBlock has been append \n")
-        for b in head_blocks:
-            if newBlock.previousHash == b.computeHash():
-                newBlock.previousBlock = b
-                head_blocks.remove(b)
-                head_blocks.append(newBlock)
+        newBlock = SocketUtils.recvObj(server)
+        if isinstance(newBlock, TxBlock.TxBlock) :
+            print("Wallet : New block has been received by walletServer \n")
+            if head_blocks == [None] :
+                if not newBlock.is_valid():
+                    print("Error! New block is invalid.")
+                else :
+                    head_blocks = [newBlock]
+                    print("Wallet : head blocks is empty, therefore newBlock is head block \n")
+            for b in head_blocks:
+                if newBlock.previousHash == b.computeHash():
+                    newBlock.previousBlock = b
+                    if not newBlock.is_valid():
+                        print("Error! New block is invalid.")
+                    else :
+                        head_blocks.remove(b)
+                        head_blocks.append(newBlock)
     server.close()
     return True
 
 def getBalance(pu_key):
-    currentBlock = Miner.findLongestBlockchain()
+    currentBlock = TxBlock.findLongestBlockchain(head_blocks)
     balance = 0.0
     while currentBlock != None :
         for tx in currentBlock.data :
@@ -52,7 +55,7 @@ def getBalance(pu_key):
 
 def sendCoins(pu_send, amt_send, pr_send, pu_recv, amt_recv, miner_list):
     Tx = Transactions.Tx()
-    Tx.add_input(pu_send, amt_recv)
+    Tx.add_input(pu_send, amt_send)
     Tx.add_output(pu_recv, amt_recv)
     Tx.sign(pr_send)
     for addr_ip, port in miner_list :
@@ -91,7 +94,7 @@ if __name__ == "__main__" :
     new3 = getBalance(pu3)
 
     #Verify balances
-    if abs(new1-bal1+1.3) > 0.00000001:
+    if abs(new1-bal1+2.0) > 0.00000001:
         print("Error: Wrong balance for pu1")
     else :
         print("Success. Good balance for pu1")
