@@ -3,6 +3,7 @@
 import SocketUtils
 import Transactions
 import TxBlock
+import pickle
 
 wallet_list = [('localhost', 5006)]
 tx_list = []
@@ -27,7 +28,7 @@ def minerServer(my_addr):
         if isinstance(newTx, Transactions.Tx) and newTx.is_valid:
             tx_list.append(newTx)
             if verbose : print("Miner : Received tx \n")
-    return False
+    return True
 
 def nonceFinder(wallet_list, my_public_addr):
     global break_now
@@ -47,14 +48,30 @@ def nonceFinder(wallet_list, my_public_addr):
         Block.find_nonce(10000)
         if Block.good_nonce():
             if verbose : print("Miner : Good nonce has been found\n")
+            head_blocks.remove(Block.previousBlock)
+            head_blocks.append(Block)
             # Send that block to each in wallet list
+            savPrev = Block.previousBlock
+            Block.previousBlock = None
             for addr_ip, port in wallet_list :
                 if verbose : print("Miner : Sending to " + addr_ip + ":" + str(port) + "\n")
                 SocketUtils.sendObj(addr_ip, Block, port)
-            head_blocks.remove(Block.previousBlock)
-            head_blocks.append(Block)
+            Block.previousBlock = savPrev
+            # Remove used txs from tx_list
             tx_list = [tx for tx in tx_list if not tx in Block.data]
     return  True
+
+def loadTxList(filename) :
+    loadfile = open(filename, "rb")
+    tx_list = pickle.load(loadfile)
+    loadfile.close()
+    return tx_list
+
+def saveTxList(the_list, filename) :
+    savefile = open(filename, "wb")
+    pickle.dump(the_list, savefile)
+    savefile.close()
+    return True
 
 if __name__ == "__main__":
 
@@ -87,13 +104,16 @@ if __name__ == "__main__":
     Tx2.sign(pr1)
     Tx2.sign(pr3)
 
-    try :
-        SocketUtils.sendObj('localhost',Tx1)
-        print("Wallet : Sent Tx1 \n")
-        SocketUtils.sendObj('localhost',Tx2)
-        print("Wallet : Sent Tx2 \n")
-    except:
-        print("Error: Connection unsuccessful")
+    new_tx_list = [Tx1, Tx2]
+    saveTxList(new_tx_list, "Txs.dat")
+    new_new_tx_list = loadTxList("Txs.dat")
+    
+    for tx in new_new_tx_list :
+        try :
+            SocketUtils.sendObj('localhost',tx)
+            print("Wallet : Sent Tx \n")
+        except:
+            print("Error: Connection unsuccessful")
 
     for i in range(10):
         newBlock = SocketUtils.recvObj(server)

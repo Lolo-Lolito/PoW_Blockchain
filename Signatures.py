@@ -5,16 +5,24 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import serialization
+import pickle
 
 def generate_keys():
     private =  rsa.generate_private_key(65537,2048)
+    private_ser = private.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.TraditionalOpenSSL,
+        encryption_algorithm=serialization.NoEncryption())
     public = private.public_key()
     public_ser = public.public_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PublicFormat.SubjectPublicKeyInfo)
-    return private, public_ser
+    return private_ser, public_ser
 
-def sign(message, private):
+def sign(message, private_ser):
+    private = serialization.load_pem_private_key(
+        private_ser,
+        password=None,)
     message = bytes(str(message), "utf-8")
     sig = private.sign(
             message,
@@ -44,17 +52,27 @@ def verify(message, sig, public_ser):
         return False
 
 def savePrivate(pr_key, filename) :
+    savefile = open(filename, "wb")
+    pickle.dump(pr_key, savefile)
+    savefile.close()
     return True
 
 def loadPrivate(filename) :
-    pr_key, pu_key = generate_keys()
+    loadfile = open(filename, "rb")
+    pr_key = pickle.load(loadfile)
+    loadfile.close()
     return pr_key
 
 def savePublic(pu_key, filename) :
+    savefile = open(filename, "wb")
+    pickle.dump(pu_key, savefile)
+    savefile.close()
     return True
 
 def loadPublic(filename) :
-    pr_key, pu_key = generate_keys()
+    loadfile = open(filename, "rb")
+    pu_key = pickle.load(loadfile)
+    loadfile.close()
     return pu_key
 
 if __name__ == '__main__':
@@ -98,5 +116,4 @@ if __name__ == '__main__':
         print("Success! Good load public key!")
     else:
         print("ERROR! Load public key is bad")
-    
     
