@@ -4,12 +4,14 @@ import SocketUtils
 import Transactions
 import TxBlock
 import pickle
+import Signatures
 
 head_blocks = [None]
 wallets = [('localhost', 5006)]
 miners = [('localhost', 5005)]
 break_now = False
 verbose = False
+my_private, my_public = Signatures.generate_keys()
 
 def StopAll() :
     global break_now
