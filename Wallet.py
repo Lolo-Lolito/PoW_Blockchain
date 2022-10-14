@@ -10,7 +10,7 @@ head_blocks = [None]
 wallets = [('localhost', 5006)]
 miners = [('localhost', 5005)]
 break_now = False
-verbose = False
+verbose = True
 my_private, my_public = Signatures.generate_keys()
 
 def StopAll() :
@@ -23,7 +23,7 @@ def walletServer(my_addr):
     try :
         head_blocks = TxBlock.loadBlocks("WalletBlocks.dat")
     except :
-        print("No previous blocks found. Starting fresh.")
+        if verbose : print("No previous blocks found. Starting fresh.")
         head_blocks = [None]
     server = SocketUtils.newServerConnection('localhost',5006)
     while not break_now :
@@ -97,14 +97,32 @@ if __name__ == "__main__" :
     bal3 = getBalance(pu3)
     
     #Send coins
-    sendCoins(pu1, 1.0, pr1, pu2, 1.0, miners)
-    sendCoins(pu1, 1.0, pr1, pu3, 0.3, miners)
+    sendCoins(pu1, 0.1, pr1, pu2, 0.1, miners)
+    sendCoins(pu1, 0.1, pr1, pu2, 0.1, miners)
+    sendCoins(pu1, 0.1, pr1, pu2, 0.1, miners)
+    sendCoins(pu1, 0.1, pr1, pu2, 0.1, miners)
+    sendCoins(pu1, 0.1, pr1, pu2, 0.1, miners)
+    sendCoins(pu1, 0.1, pr1, pu2, 0.1, miners)
+    sendCoins(pu1, 0.1, pr1, pu2, 0.1, miners)
+    sendCoins(pu1, 0.1, pr1, pu2, 0.1, miners)
+    sendCoins(pu1, 0.1, pr1, pu2, 0.1, miners)
+    sendCoins(pu1, 0.1, pr1, pu2, 0.1, miners)
+    sendCoins(pu1, 0.1, pr1, pu3, 0.03, miners)
+    sendCoins(pu1, 0.1, pr1, pu3, 0.03, miners)
+    sendCoins(pu1, 0.1, pr1, pu3, 0.03, miners)
+    sendCoins(pu1, 0.1, pr1, pu3, 0.03, miners)
+    sendCoins(pu1, 0.1, pr1, pu3, 0.03, miners)
+    sendCoins(pu1, 0.1, pr1, pu3, 0.03, miners)
+    sendCoins(pu1, 0.1, pr1, pu3, 0.03, miners)
+    sendCoins(pu1, 0.1, pr1, pu3, 0.03, miners)
+    sendCoins(pu1, 0.1, pr1, pu3, 0.03, miners)
+    sendCoins(pu1, 0.1, pr1, pu3, 0.03, miners)
 
-    time.sleep(60)
+    time.sleep(10)
 
     #Save/Load all blocks
-    TxBlock.saveBlocks(head_blocks, "AllBlocks.dat")
-    head_blocks = TxBlock.loadBlocks("AllBlocks.dat")
+    TxBlock.saveBlocks(head_blocks, "WalletBlocks.dat")
+    head_blocks = TxBlock.loadBlocks("WalletBlocks.dat")
     
     #Query balances
     new1 = getBalance(pu1)

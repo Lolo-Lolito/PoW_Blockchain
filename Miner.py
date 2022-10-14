@@ -9,7 +9,7 @@ wallet_list = [('localhost', 5006)]
 tx_list = []
 head_blocks = [None]
 break_now = False
-verbose = False
+verbose = True
 
 def StopAll() :
     global break_now 
@@ -22,7 +22,7 @@ def minerServer(my_addr):
         tx_list = loadTxList("Txs.dat")
         if verbose : print("Loaded tx_list has " + str(len(tx_list)) + " Txs.")
     except :
-        print("No previous Txs. Starting from fresh")
+        if verbose : print("No previous Txs. Starting from fresh")
         tx_list = []
     my_ip, my_port = my_addr
     # Open server connection

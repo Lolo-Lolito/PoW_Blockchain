@@ -10,8 +10,8 @@ import time
 import random
 
 reward = 25.0
-zeroHashNumber = 2
-nextCharLimit = 200
+zeroHashNumber = 1
+nextCharLimit = 10
 
 class TxBlock (CBlock):
     nonce = "AAAAAAAAAA"
@@ -220,3 +220,24 @@ if __name__ == "__main__" :
     else:
         print("ERROR! Greedy minor not detected")      
     
+    B6 = TxBlock(B4)
+    this_pu = pu4
+    this_pr = pr4
+    for i in range(30) :
+        newTx = Tx()
+        new_pr, new_pu = generate_keys()
+        newTx.add_input(this_pu, 0.3)
+        newTx.add_output(new_pu, 0.3)
+        newTx.sign(this_pr)
+        B6.addTx(newTx)
+        this_pu, this_pr = new_pu, new_pr
+        savePrev = B6.previousBlock
+        B6.previousBlock = None
+        this_size = len(pickle.dumps(B6))
+        B6.previousBlock = savePrev
+        if B6.is_valid() and this_size > 10000 :
+            print("Error ! Big blocks are valid: size = " + str(this_size))
+        elif (not B6.is_valid()) and this_size <= 10000 :
+            print("Error! Small blocks are invalid: size = " + str(this_size))
+        else:
+            print("Success! Block size check passed.")
