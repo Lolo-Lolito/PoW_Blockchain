@@ -18,7 +18,12 @@ def StopAll() :
 def minerServer(my_addr):
     global tx_list
     global break_now
-    global lock
+    try :
+        tx_list = loadTxList("Txs.dat")
+        if verbose : print("Loaded tx_list has " + str(len(tx_list)) + " Txs.")
+    except :
+        print("No previous Txs. Starting from fresh")
+        tx_list = []
     my_ip, my_port = my_addr
     # Open server connection
     server = SocketUtils.newServerConnection(my_ip, my_port)
@@ -28,11 +33,18 @@ def minerServer(my_addr):
         if isinstance(newTx, Transactions.Tx) and newTx.is_valid:
             tx_list.append(newTx)
             if verbose : print("Miner : Received tx \n")
+    if verbose : print("saving " + str(len(tx_list)) + " txs to Txs.dat")
+    saveTxList(tx_list, "Txs.dat")
     return True
 
 def nonceFinder(wallet_list, my_public_addr):
     global break_now
     global tx_list
+    try :
+        head_blocks = TxBlock.loadBlocks("AllBlocks.dat")
+    except :
+        print("No previous blocks found. Starting fresh.")
+        head_blocks = [None]
     # Collect into block
     while not break_now :
         Block = TxBlock.TxBlock(TxBlock.findLongestBlockchain(head_blocks))
@@ -59,6 +71,7 @@ def nonceFinder(wallet_list, my_public_addr):
             Block.previousBlock = savPrev
             # Remove used txs from tx_list
             tx_list = [tx for tx in tx_list if not tx in Block.data]
+    TxBlock.saveBlocks(head_blocks, "AllBlocks.dat")
     return  True
 
 def loadTxList(filename) :

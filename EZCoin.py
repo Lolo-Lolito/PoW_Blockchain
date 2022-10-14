@@ -17,9 +17,10 @@ tWalletServer = None
 def startMiner() :
     global tMinerClient
     global tMinerServer
-    Miner.tx_list = Miner.loadTxList("Txs.dat")
-    Miner.head_blocks = Wallet.loadBlocks("AllBlocks.dat")
-    my_public_addr = Signatures.loadPublic("public.key")
+    try :
+        my_public_addr = Signatures.loadPublic("public.key")
+    except :
+        print("No public.key Need to generate?")
     tMinerServer = threading.Thread(target = Miner.minerServer, args = ((my_ip, 5005),))
     tMinerClient = threading.Thread(target = Miner.nonceFinder, args = (wallets, my_public_addr))
     tMinerServer.start()
@@ -29,9 +30,8 @@ def startMiner() :
 def startWallet() :
     global tWalletServer
     global my_private, my_public
-    Wallet.head_blocks = Wallet.loadBlocks("AllBlocks.dat")
-    my_private, my_public = Wallet.loadKeys("private.key", "public.key")
-    tWalletServer = threading.Thread(target= Wallet.walletServer, args=(('localhost', 5006),))
+    my_private, my_public = Signatures.loadKeys("private.key", "public.key")
+    tWalletServer = threading.Thread(target= Wallet.walletServer, args=((my_ip, 5006),))
     tWalletServer.start()
     return True
 
@@ -39,20 +39,23 @@ def stopMiner() :
     global tMinerClient
     global tMinerServer
     Miner.StopAll()
-    Miner.saveTxList(Miner.tx_list, "Txs.dat")
-    Wallet.saveBlocks(Miner.head_blocks, "AllBlocks.dat")
-    tMinerServer.join()
-    tMinerClient.join()
+    if tMinerServer : tMinerServer.join()
+    if tMinerClient : tMinerClient.join()
+    tMinerServer = None
+    tMierClient = None
     return True
 
 def stopWallet() :
     global tWalletServer
     Wallet.StopAll()
-    Wallet.saveBlocks(Wallet.head_blocks, "AllBlocks.dat")
-    tWalletServer.join()
+    if tWalletServer : tWalletServer.join()
+    tWalletServer = None
     return True
 
 def getBalance(pu_key) :
+    if not tWalletServer :
+        print("Start the server by calling startWallet before checking balances")
+        return 0.0
     return Wallet.getBalance(pu_key)
 
 def sendCoins(pu_recv, amt, tx_fee) :

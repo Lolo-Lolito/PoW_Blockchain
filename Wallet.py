@@ -20,6 +20,11 @@ def StopAll() :
 def walletServer(my_addr):
     global break_now
     global head_blocks
+    try :
+        head_blocks = TxBlock.loadBlocks("WalletBlocks.dat")
+    except :
+        print("No previous blocks found. Starting fresh.")
+        head_blocks = [None]
     server = SocketUtils.newServerConnection('localhost',5006)
     while not break_now :
         newBlock = SocketUtils.recvObj(server)
@@ -40,6 +45,7 @@ def walletServer(my_addr):
                         head_blocks.remove(b)
                         head_blocks.append(newBlock)
     server.close()
+    TxBlock.saveBlocks(head_blocks, "WalletBlocks.dat")
     return True
 
 def getBalance(pu_key):
@@ -66,21 +72,6 @@ def sendCoins(pu_send, amt_send, pr_send, pu_recv, amt_recv, miner_list):
         SocketUtils.sendObj(addr_ip, Tx, port)
     return True
 
-def loadKeys(pr_file, pu_file) :
-    return Signatures.loadPrivate(pr_file), Signatures.loadPublic(pu_file)
-
-def saveBlocks(block_list, filename) :
-    savefile = open(filename, "wb")
-    pickle.dump(block_list, savefile)
-    savefile.close()
-    return True
-
-def loadBlocks(filename) :
-    loadfile = open(filename, "rb")
-    block_list = pickle.load(loadfile)
-    loadfile.close()
-    return block_list
-
 if __name__ == "__main__" :
 
     import time
@@ -96,7 +87,7 @@ if __name__ == "__main__" :
     t2.start()
     t3.start()
 
-    pr1, pu1 = loadKeys("private.key", "public.key")
+    pr1, pu1 = Signatures.loadKeys("private.key", "public.key")
     pr2, pu2 = Signatures.generate_keys()
     pr3, pu3 = Signatures.generate_keys()
 
@@ -112,8 +103,8 @@ if __name__ == "__main__" :
     time.sleep(60)
 
     #Save/Load all blocks
-    saveBlocks(head_blocks, "AllBlocks.dat")
-    head_blocks = loadBlocks("AllBlocks.dat")
+    TxBlock.saveBlocks(head_blocks, "AllBlocks.dat")
+    head_blocks = TxBlock.loadBlocks("AllBlocks.dat")
     
     #Query balances
     new1 = getBalance(pu1)

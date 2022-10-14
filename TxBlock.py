@@ -72,6 +72,18 @@ def findLongestBlockchain(head_blocks):
             longest = this_len
     return long_head
 
+def saveBlocks(block_list, filename) :
+    savefile = open(filename, "wb")
+    pickle.dump(block_list, savefile)
+    savefile.close()
+    return True
+
+def loadBlocks(filename) :
+    loadfile = open(filename, "rb")
+    block_list = pickle.load(loadfile)
+    loadfile.close()
+    return block_list
+
 if __name__ == "__main__" :
     pr1, pu1 = generate_keys()
     pr2, pu2 = generate_keys()

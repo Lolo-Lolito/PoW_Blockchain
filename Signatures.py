@@ -75,6 +75,9 @@ def loadPublic(filename) :
     loadfile.close()
     return pu_key
 
+def loadKeys(pr_file, pu_file) :
+    return loadPrivate(pr_file), loadPublic(pu_file)
+
 if __name__ == '__main__':
     pr, pu = generate_keys()
     message = "This is a secret message"
