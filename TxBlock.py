@@ -8,17 +8,22 @@ from cryptography.hazmat.primitives import hashes
 import pickle
 import time
 import random
+import copy
 
 reward = 25.0
 zeroHashNumber = 1
 nextCharLimit = 10
+blockSizeLimit = 10000
 
 class TxBlock (CBlock):
     nonce = "AAAAAAAAAA"
+
     def __init__(self, previousBlock) :
         super(TxBlock, self).__init__([],previousBlock)
+
     def addTx(self, Tx_in) :
         self.data.append(Tx_in)
+
     def count_totals(self):
         total_in = 0
         total_out = 0
@@ -28,6 +33,7 @@ class TxBlock (CBlock):
             for addr, amt in tx.outputs:
                 total_out = total_out + amt     
         return total_in, total_out
+
     def is_valid(self):
         if not super(TxBlock, self).is_valid():
             return False
@@ -37,7 +43,12 @@ class TxBlock (CBlock):
         total_in, total_out = self.count_totals()
         if total_out - total_in - reward > 0.000000000001:
             return False
+        l_block = copy.deepcopy(self)
+        l_block.previousBlock = None
+        if len(pickle.dumps(l_block)) > blockSizeLimit :
+            return False
         return True
+
     def good_nonce(self):
         expectedHash = bytes("".join(['\x00' for i in range(zeroHashNumber)]),"utf-8")
         digest = hashes.Hash(hashes.SHA256())
@@ -49,6 +60,7 @@ class TxBlock (CBlock):
             if calculatedHash[i] != expectedHash[i] :
                 return False
         return int(calculatedHash[zeroHashNumber]) < nextCharLimit
+
     def find_nonce(self, n_iter):
         nonceLength = 10
         for i in range(n_iter) :

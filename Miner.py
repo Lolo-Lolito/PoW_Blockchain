@@ -20,9 +20,9 @@ def minerServer(my_addr):
     global break_now
     try :
         tx_list = loadTxList("Txs.dat")
-        if verbose : print("Loaded tx_list has " + str(len(tx_list)) + " Txs.")
+        if verbose : print("Miner : Loaded tx_list has " + str(len(tx_list)) + " Txs.")
     except :
-        if verbose : print("No previous Txs. Starting from fresh")
+        if verbose : print("Miner : No previous Txs. Starting from fresh")
         tx_list = []
     my_ip, my_port = my_addr
     # Open server connection
@@ -33,7 +33,7 @@ def minerServer(my_addr):
         if isinstance(newTx, Transactions.Tx) and newTx.is_valid:
             tx_list.append(newTx)
             if verbose : print("Miner : Received tx \n")
-    if verbose : print("saving " + str(len(tx_list)) + " txs to Txs.dat")
+    if verbose : print("Miner : saving " + str(len(tx_list)) + " txs to Txs.dat")
     saveTxList(tx_list, "Txs.dat")
     return True
 
@@ -43,7 +43,7 @@ def nonceFinder(wallet_list, my_public_addr):
     try :
         head_blocks = TxBlock.loadBlocks("AllBlocks.dat")
     except :
-        print("No previous blocks found. Starting fresh.")
+        print("Miner : No previous blocks found. Starting fresh.")
         head_blocks = [None]
     # Collect into block
     while not break_now :

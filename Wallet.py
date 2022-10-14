@@ -23,7 +23,7 @@ def walletServer(my_addr):
     try :
         head_blocks = TxBlock.loadBlocks("WalletBlocks.dat")
     except :
-        if verbose : print("No previous blocks found. Starting fresh.")
+        if verbose : print("Wallet : No previous blocks found. Starting fresh.")
         head_blocks = [None]
     server = SocketUtils.newServerConnection('localhost',5006)
     while not break_now :
