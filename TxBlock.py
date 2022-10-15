@@ -38,6 +38,14 @@ class TxBlock (CBlock):
                 total_out = total_out + amt     
         return total_in, total_out
 
+    def check_size(self):
+        l_block = copy.deepcopy(self)
+        l_block.previousBlock = None
+        if len(pickle.dumps(l_block)) > blockSizeLimit :
+            if verbose : print("Error : Block exceeds block limit")
+            return False
+        return True
+
     def is_valid(self):
         if not super(TxBlock, self).is_valid():
             if verbose : print("Error : Block basis is invalid")
@@ -50,10 +58,7 @@ class TxBlock (CBlock):
         if total_out - total_in - reward > 0.000000000001:
             if verbose : print("Error : Block total amount distribution is invalid")
             return False
-        l_block = copy.deepcopy(self)
-        l_block.previousBlock = None
-        if len(pickle.dumps(l_block)) > blockSizeLimit :
-            if verbose : print("Error : Block exceeds block limit")
+        if not self.check_size():
             return False
         return True
 
@@ -134,7 +139,13 @@ if __name__ == "__main__" :
     loadfile.close()
 
     root = TxBlock(None)
+    mine1 = Tx()
+    mine1.add_output(pu1, 8.0)
+    mine1.add_output(pu2, 8.0)
+    mine1.add_output(pu3, 8.0)
+
     root.addTx(Tx1)
+    root.addTx(mine1)
 
     Tx2 = Tx()
     Tx2.add_input(pu2,1.1)
@@ -261,3 +272,40 @@ if __name__ == "__main__" :
             print("Error! Small blocks are invalid: size = " + str(this_size))
         else:
             print("Success! Block size check passed.")
+
+    overspend = Tx()
+    overspend.add_input(pu1, 45.0)
+    overspend.add_output(pu2, 44.5)
+    overspend.sign(pr1)
+    B7 = TxBlock(B4)
+    B7.addTx(overspend)
+    if B7.is_valid() :
+        print("Error! Overspend not detected")
+    else :
+        print("Success! Overspend detected")
+
+    overspend1 = Tx()
+    overspend1.add_input(pu1, 5.0)
+    overspend1.add_output(pu2, 4.5)
+    overspend1.sign(pr1)
+    overspend2 = Tx()
+    overspend2.add_input(pu1, 15.0)
+    overspend2.add_output(pu3, 14.5)
+    overspend2.sign(pr1)
+    overspend3 = Tx()
+    overspend3.add_input(pu1, 5.0)
+    overspend3.add_output(pu4, 4.5)
+    overspend3.sign(pr1)
+    overspend4 = Tx()
+    overspend4.add_input(pu1, 8.0)
+    overspend4.add_output(pu2, 4.5)
+    overspend4.sign(pr1)
+    B8 = TxBlock(B4)
+    B8.addTx(overspend1)
+    B8.addTx(overspend2)
+    B8.addTx(overspend3)
+    B8.addTx(overspend4)
+    if B8.is_valid() :
+        print("Error! Overspend not detected")
+    else :
+        print("Success! Overspend detected")    

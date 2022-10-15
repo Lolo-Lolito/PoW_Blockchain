@@ -50,13 +50,17 @@ def nonceFinder(wallet_list, my_public_addr):
     # Collect into block
     while not break_now :
         Block = TxBlock.TxBlock(TxBlock.findLongestBlockchain(head_blocks))
+        placeholder = Transactions.Tx()
+        placeholder.add_output(my_public_addr, 25.0)
+        Block.addTx(placeholder)
+        #TODO sort tx_list by tx fee per byte
         for tx in tx_list :
-                Block.addTx(tx)
-                l_block = copy.deepcopy(Block)
-                l_block.previousBlock = None
-                if len(pickle.dumps(l_block)) > TxBlock.blockSizeLimit - minerRewardTxSize :
-                    Block.removeTx(tx)
-                    break
+            Block.addTx(tx)
+            if not Block.check_size() :
+                Block.removeTx(tx)
+                break
+        Block.removeTx(placeholder)
+        if verbose : print("Miner : new block has " + str(len(Block.data)) + " txs.")          
         # Calculation of miner reward
         total_in, total_out = Block.count_totals()
         minerRewardTx = Transactions.Tx()
