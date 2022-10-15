@@ -4,12 +4,14 @@ import SocketUtils
 import Transactions
 import TxBlock
 import pickle
+import copy
 
 wallet_list = [('localhost', 5006)]
 tx_list = []
 head_blocks = [None]
 break_now = False
 verbose = True
+minerRewardTxSize = 552
 
 def StopAll() :
     global break_now 
@@ -48,8 +50,13 @@ def nonceFinder(wallet_list, my_public_addr):
     # Collect into block
     while not break_now :
         Block = TxBlock.TxBlock(TxBlock.findLongestBlockchain(head_blocks))
-        for tx in tx_list : 
+        for tx in tx_list :
                 Block.addTx(tx)
+                l_block = copy.deepcopy(Block)
+                l_block.previousBlock = None
+                if len(pickle.dumps(l_block)) > TxBlock.blockSizeLimit - minerRewardTxSize :
+                    Block.removeTx(tx)
+                    break
         # Calculation of miner reward
         total_in, total_out = Block.count_totals()
         minerRewardTx = Transactions.Tx()

@@ -12,8 +12,9 @@ import copy
 
 reward = 25.0
 zeroHashNumber = 1
-nextCharLimit = 10
+nextCharLimit = 3
 blockSizeLimit = 10000
+verbose = False
 
 class TxBlock (CBlock):
     nonce = "AAAAAAAAAA"
@@ -23,6 +24,9 @@ class TxBlock (CBlock):
 
     def addTx(self, Tx_in) :
         self.data.append(Tx_in)
+
+    def removeTx(self, Tx_in) :
+        self.data.remove(Tx_in)
 
     def count_totals(self):
         total_in = 0
@@ -36,16 +40,20 @@ class TxBlock (CBlock):
 
     def is_valid(self):
         if not super(TxBlock, self).is_valid():
+            if verbose : print("Error : Block basis is invalid")
             return False
         for tx in self.data:
             if not tx.is_valid():
+                if verbose : print("Error : a Tx is invalid")
                 return False
         total_in, total_out = self.count_totals()
         if total_out - total_in - reward > 0.000000000001:
+            if verbose : print("Error : Block total amount distribution is invalid")
             return False
         l_block = copy.deepcopy(self)
         l_block.previousBlock = None
         if len(pickle.dumps(l_block)) > blockSizeLimit :
+            if verbose : print("Error : Block exceeds block limit")
             return False
         return True
 

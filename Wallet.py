@@ -118,7 +118,7 @@ if __name__ == "__main__" :
     sendCoins(pu1, 0.1, pr1, pu3, 0.03, miners)
     sendCoins(pu1, 0.1, pr1, pu3, 0.03, miners)
 
-    time.sleep(10)
+    time.sleep(60)
 
     #Save/Load all blocks
     TxBlock.saveBlocks(head_blocks, "WalletBlocks.dat")
