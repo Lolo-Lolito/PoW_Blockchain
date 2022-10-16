@@ -64,8 +64,6 @@ class TxBlock (CBlock):
         for tx in self.data :
             for addrInput, sendAmt in tx.inputs :
                 if self.getBalance(addrInput) < 0 : return False
-            for addrOutput, recvAmt in tx.outputs :
-                if self.getBalance(addrOutput) < 0 : return False
         return True
 
     def is_valid(self):
