@@ -9,6 +9,7 @@ import pickle
 import time
 import random
 import copy
+import Wallet
 
 reward = 25.0
 zeroHashNumber = 1
@@ -42,8 +43,29 @@ class TxBlock (CBlock):
         l_block = copy.deepcopy(self)
         l_block.previousBlock = None
         if len(pickle.dumps(l_block)) > blockSizeLimit :
-            if verbose : print("Error : Block exceeds block limit")
             return False
+        return True
+
+    def getBalance(self, pu_key):
+        currentBlock = self
+        balance = 0.0
+        while currentBlock != None :
+            for tx in currentBlock.data :
+                for pu, amt in tx.inputs :
+                    if pu == pu_key:
+                        balance = balance - amt
+                for pu, amt in tx.outputs :
+                    if pu == pu_key :
+                        balance = balance + amt
+            currentBlock = currentBlock.previousBlock
+        return balance
+
+    def check_balance(self) :
+        for tx in self.data :
+            for addrInput, sendAmt in tx.inputs :
+                if self.getBalance(addrInput) < 0 : return False
+            for addrOutput, recvAmt in tx.outputs :
+                if self.getBalance(addrOutput) < 0 : return False
         return True
 
     def is_valid(self):
@@ -59,6 +81,10 @@ class TxBlock (CBlock):
             if verbose : print("Error : Block total amount distribution is invalid")
             return False
         if not self.check_size():
+            if verbose : print("Error : Block exceeds block limit")
+            return False
+        if not self.check_balance():
+            if verbose : print("Error : Error in balance")
             return False
         return True
 
@@ -277,7 +303,7 @@ if __name__ == "__main__" :
     overspend.add_input(pu1, 45.0)
     overspend.add_output(pu2, 44.5)
     overspend.sign(pr1)
-    B7 = TxBlock(B4)
+    B7 = TxBlock(B1)
     B7.addTx(overspend)
     if B7.is_valid() :
         print("Error! Overspend not detected")
@@ -300,7 +326,7 @@ if __name__ == "__main__" :
     overspend4.add_input(pu1, 8.0)
     overspend4.add_output(pu2, 4.5)
     overspend4.sign(pr1)
-    B8 = TxBlock(B4)
+    B8 = TxBlock(B1)
     B8.addTx(overspend1)
     B8.addTx(overspend2)
     B8.addTx(overspend3)
