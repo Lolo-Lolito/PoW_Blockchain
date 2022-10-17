@@ -50,17 +50,7 @@ def walletServer(my_addr):
 
 def getBalance(pu_key):
     currentBlock = TxBlock.findLongestBlockchain(head_blocks)
-    balance = 0.0
-    while currentBlock != None :
-        for tx in currentBlock.data :
-            for pu, amt in tx.inputs :
-                if pu == pu_key:
-                    balance = balance - amt
-            for pu, amt in tx.outputs :
-                if pu == pu_key :
-                    balance = balance + amt
-        currentBlock = currentBlock.previousBlock
-    return balance
+    return currentBlock.getBalance(pu_key)
 
 def sendCoins(pu_send, amt_send, pr_send, pu_recv, amt_recv, miner_list):
     Tx = Transactions.Tx()
@@ -97,6 +87,7 @@ if __name__ == "__main__" :
     bal3 = getBalance(pu3)
     
     #Send coins
+    sendCoins(miner_pu, 10, miner_pr, pu1, 10, miners)
     sendCoins(pu1, 0.1, pr1, pu2, 0.1, miners)
     sendCoins(pu1, 0.1, pr1, pu2, 0.1, miners)
     sendCoins(pu1, 0.1, pr1, pu2, 0.1, miners)
@@ -130,7 +121,7 @@ if __name__ == "__main__" :
     new3 = getBalance(pu3)
 
     #Verify balances
-    if abs(new1-bal1+2.0) > 0.00000001:
+    if abs(new1-bal1+2.0-10) > 0.00000001:
         print("Error: Wrong balance for pu1")
     else :
         print("Success. Good balance for pu1")
