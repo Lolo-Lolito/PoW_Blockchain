@@ -74,12 +74,12 @@ def getBalance(pu_key):
     currentBlock = TxBlock.findLongestBlockchain(head_blocks)
     return currentBlock.getBalance(pu_key)
 
-def sendCoins(pu_send, amt_send, pr_send, pu_recv, amt_recv, miner_list):
+def sendCoins(pu_send, amt_send, pr_send, pu_recv, amt_recv):
     Tx = Transactions.Tx()
     Tx.add_input(pu_send, amt_send)
     Tx.add_output(pu_recv, amt_recv)
     Tx.sign(pr_send)
-    for addr_ip, port in miner_list :
+    for addr_ip, port in miners :
         if verbose : print("Wallet : Sending to " + addr_ip + ":" + str(port) + "\n")
         SocketUtils.sendObj(addr_ip, Tx, port)
     return True
@@ -90,7 +90,20 @@ if __name__ == "__main__" :
     import threading
     import Miner
     import Signatures
-        
+
+    def Thief(my_addr):
+        my_ip, my_port = my_addr
+        # Open server connection
+        server = SocketUtils.newServerConnection(my_ip, my_port)
+        # Receive transactions
+        while not break_now : 
+            newTx = SocketUtils.recvObj(server)
+            if isinstance(newTx, Transactions.Tx) and newTx.is_valid:
+                for ip, port in miners :
+                    if not (ip == my_ip and port == my_port) :
+                        SocketUtils.sendObj(ip, newTx, port)
+    
+    
     miner_pr, miner_pu = Signatures.generate_keys()
     t1 = threading.Thread(target = Miner.minerServer, args = (('localhost', 5005),))
     t2 = threading.Thread(target = Miner.nonceFinder, args = (wallets, miner_pu))
@@ -109,28 +122,28 @@ if __name__ == "__main__" :
     bal3 = getBalance(pu3)
     
     #Send coins
-    sendCoins(miner_pu, 10, miner_pr, pu1, 10, miners)
-    sendCoins(pu1, 0.1, pr1, pu2, 0.1, miners)
-    sendCoins(pu1, 0.1, pr1, pu2, 0.1, miners)
-    sendCoins(pu1, 0.1, pr1, pu2, 0.1, miners)
-    sendCoins(pu1, 0.1, pr1, pu2, 0.1, miners)
-    sendCoins(pu1, 0.1, pr1, pu2, 0.1, miners)
-    sendCoins(pu1, 0.1, pr1, pu2, 0.1, miners)
-    sendCoins(pu1, 0.1, pr1, pu2, 0.1, miners)
-    sendCoins(pu1, 0.1, pr1, pu2, 0.1, miners)
-    sendCoins(pu1, 0.1, pr1, pu2, 0.1, miners)
-    sendCoins(pu1, 0.1, pr1, pu2, 0.1, miners)
-    sendCoins(pu1, 0.1, pr1, pu3, 0.03, miners)
-    sendCoins(pu1, 0.1, pr1, pu3, 0.03, miners)
-    sendCoins(pu1, 0.1, pr1, pu3, 0.03, miners)
-    sendCoins(pu1, 0.1, pr1, pu3, 0.03, miners)
-    sendCoins(pu1, 0.1, pr1, pu3, 0.03, miners)
-    sendCoins(pu1, 0.1, pr1, pu3, 0.03, miners)
-    sendCoins(pu1, 0.1, pr1, pu3, 0.03, miners)
-    sendCoins(pu1, 0.1, pr1, pu3, 0.03, miners)
-    sendCoins(pu1, 0.1, pr1, pu3, 0.03, miners)
-    sendCoins(pu1, 0.1, pr1, pu3, 0.03, miners)
-
+    sendCoins(miner_pu, 10, miner_pr, pu1, 10)
+    sendCoins(pu1, 0.1, pr1, pu2, 0.1)
+    sendCoins(pu1, 0.1, pr1, pu2, 0.1)
+    sendCoins(pu1, 0.1, pr1, pu2, 0.1)
+    sendCoins(pu1, 0.1, pr1, pu2, 0.1)
+    sendCoins(pu1, 0.1, pr1, pu2, 0.1)
+    sendCoins(pu1, 0.1, pr1, pu2, 0.1)
+    sendCoins(pu1, 0.1, pr1, pu2, 0.1)
+    sendCoins(pu1, 0.1, pr1, pu2, 0.1)
+    sendCoins(pu1, 0.1, pr1, pu2, 0.1)
+    sendCoins(pu1, 0.1, pr1, pu2, 0.1)
+    sendCoins(pu1, 0.1, pr1, pu3, 0.03)
+    sendCoins(pu1, 0.1, pr1, pu3, 0.03)
+    sendCoins(pu1, 0.1, pr1, pu3, 0.03)
+    sendCoins(pu1, 0.1, pr1, pu3, 0.03)
+    sendCoins(pu1, 0.1, pr1, pu3, 0.03)
+    sendCoins(pu1, 0.1, pr1, pu3, 0.03)
+    sendCoins(pu1, 0.1, pr1, pu3, 0.03)
+    sendCoins(pu1, 0.1, pr1, pu3, 0.03)
+    sendCoins(pu1, 0.1, pr1, pu3, 0.03)
+    sendCoins(pu1, 0.1, pr1, pu3, 0.03)
+    
     time.sleep(60)
 
     #Save/Load all blocks
@@ -156,6 +169,21 @@ if __name__ == "__main__" :
     else :
         print("Success. Good balance for pu3")
 
+    #Thief will try to duplicate transactions
+    miners.append(('localhost', 5007))
+    t4 = threading.Thread(target=Thief, args=(('localhost',5007),))
+    t4.start()
+    sendCoins(pu2, 0.2, pr2, pu1, 0.2)
+    time.sleep(20)
+
+    #Check the balances :
+    newnew1 = getBalance(pu1)
+    print(newnew1)
+    if (abs(newnew1 - new1 - 0.2) > 0.0000000001):
+        print("Error! Ducplicate Txs accepted.")
+    else:
+        print("Success! Duplicate Txs rejected.")
+            
     Miner.StopAll()
 
     num_heads = len(head_blocks)
