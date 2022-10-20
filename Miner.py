@@ -46,7 +46,7 @@ def nonceFinder(wallet_list, my_public_addr):
         head_blocks = TxBlock.loadBlocks("AllBlocks.dat")
     except :
         print("Miner : No previous blocks found. Starting fresh.")
-        head_blocks = [None]
+        head_blocks = TxBlock.loadBlocks("Genesis.dat")
     # Collect into block
     while not break_now :
         Block = TxBlock.TxBlock(TxBlock.findLongestBlockchain(head_blocks))

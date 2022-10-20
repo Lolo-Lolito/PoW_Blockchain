@@ -24,26 +24,48 @@ def walletServer(my_addr):
         head_blocks = TxBlock.loadBlocks("WalletBlocks.dat")
     except :
         if verbose : print("Wallet : No previous blocks found. Starting fresh.")
-        head_blocks = [None]
+        head_blocks = TxBlock.loadBlocks("Genesis.dat")
     server = SocketUtils.newServerConnection('localhost',5006)
     while not break_now :
         newBlock = SocketUtils.recvObj(server)
         if isinstance(newBlock, TxBlock.TxBlock) :
             if verbose : print("Wallet : New block has been received by walletServer \n")
-            if head_blocks == [None] :
-                if not newBlock.is_valid():
-                    print("Error! New block is invalid.")
-                else :
-                    head_blocks = [newBlock]
-                    if verbose : print("Wallet : head blocks is empty, therefore newBlock is head block \n")
+            found = False
             for b in head_blocks:
-                if newBlock.previousHash == b.computeHash():
-                    newBlock.previousBlock = b
+                if b == None :
                     if not newBlock.is_valid():
-                        print("Error! New block is invalid.")
+                        if verbose : print("Error! New block is invalid.")
                     else :
                         head_blocks.remove(b)
                         head_blocks.append(newBlock)
+                        found = True
+                        if verbose : print("Wallet : head blocks is empty, therefore newBlock is head block \n")             
+                elif newBlock.previousHash == b.computeHash():
+                    newBlock.previousBlock = b
+                    if not newBlock.is_valid():
+                        if verbose : print("Error! New block is invalid.")
+                    else :
+                        found = True
+                        head_blocks.remove(b)
+                        head_blocks.append(newBlock)
+                else :
+                    currentBlock = b
+                    while currentBlock != None :
+                        if newBlock.previousHash == currentBlock.computeHash():
+                            newBlock.previousBlock = currentBlock
+                            if not newBlock.is_valid():
+                                if verbose : print("Error! New block is invalid.")
+                                break
+                            else :
+                                if not newBlock in head_blocks :
+                                    if verbose : print("Wallet : New head block has been found.")
+                                    head_blocks.append(newBlock)
+                                    found = True
+                                break
+                        currentBlock = currentBlock.previousBlock
+            if not found :
+                if verbose : print("Error! Could'nt find a parent for newBlock")
+                #TODO handle orphaned blocks
     server.close()
     TxBlock.saveBlocks(head_blocks, "WalletBlocks.dat")
     return True
@@ -135,6 +157,17 @@ if __name__ == "__main__" :
         print("Success. Good balance for pu3")
 
     Miner.StopAll()
+
+    num_heads = len(head_blocks)
+    sister = TxBlock.TxBlock(head_blocks[0].previousBlock.previousBlock)
+    sister.previousBlock = None
+    SocketUtils.sendObj('localhost', sister, 5006)
+    time.sleep(10)
+    if(len(head_blocks) == num_heads + 1):
+        print("Success! New head_block created")
+    else:
+        print("Error! Failed to add sister block")
+
     StopAll()
     
     t1.join()
