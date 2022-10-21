@@ -1,17 +1,20 @@
 #Transaction.py
 
 import Signatures
+import random
 
 class Tx:
     inputs = None
     outputs = None
     sigs = None
     reqd = None
+    rand = None
     def __init__(self):
         self.inputs = []
         self.outputs = []
         self.sigs = []
         self.reqd = []
+        self.rand = [chr(random.randint(0,0xFF)) for i in range(10)]
     def add_input(self, from_addr, amount):
         self.inputs.append((from_addr, amount))
     def add_output(self, to_addr, amount):
@@ -54,6 +57,7 @@ class Tx:
         data.append(self.inputs)
         data.append(self.outputs)
         data.append(self.reqd)
+        data.append(self.rand)
         return data
     def __repr__(self):
         reprstr = "INPUTS:\n"
@@ -121,12 +125,15 @@ if __name__ == "__main__":
     Tx6.sign(pr3)
 
     # Outputs exceed inputs
+    # Not relevant since miner reward brings this condition
+    '''
     Tx7 = Tx()
     Tx7.add_input(pu4, 1.2)
     Tx7.add_output(pu1 ,1)
     Tx7.add_output(pu2 ,2)
     Tx7.sign(pr4)
-
+    '''
+    
     # Negative amout of coins
     Tx8 = Tx()
     Tx8.add_input(pu2, -1)
@@ -142,7 +149,7 @@ if __name__ == "__main__":
     # change to [(pu3,1)]
     Tx9.outputs[0] = (pu3, 1)
     
-    for t in [Tx4, Tx5, Tx6, Tx7, Tx8, Tx9]:
+    for t in [Tx4, Tx5, Tx6, Tx8, Tx9]:
         if t.is_valid() :
             print("ERROR! Bad Tx is valid")
         else:

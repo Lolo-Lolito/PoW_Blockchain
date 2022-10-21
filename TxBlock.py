@@ -66,6 +66,17 @@ class TxBlock (CBlock):
                 if self.getBalance(addrInput) < 0 : return False
         return True
 
+    def check_transaction(self) :
+        currentBlock = self
+        while currentBlock != None :
+            for currentTx in currentBlock.data :
+                for checkTx in currentBlock.data :
+                    if currentTx != checkTx :
+                        if checkTx.rand == currentTx.rand and checkTx.__repr__() == currentTx.__repr__() :
+                            return False
+            currentBlock = currentBlock.previousBlock
+        return True
+    
     def is_valid(self):
         if not super(TxBlock, self).is_valid():
             if verbose : print("Error : Block basis is invalid")
@@ -83,6 +94,9 @@ class TxBlock (CBlock):
             return False
         if not self.check_balance():
             if verbose : print("Error : Error in balance")
+            return False
+        if not self.check_transaction() :
+            if verbose : print("Error : replayed transaction detected")
             return False
         return True
 

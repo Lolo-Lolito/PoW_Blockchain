@@ -24,7 +24,10 @@ def walletServer(my_addr):
         head_blocks = TxBlock.loadBlocks("WalletBlocks.dat")
     except :
         if verbose : print("Wallet : No previous blocks found. Starting fresh.")
-        head_blocks = TxBlock.loadBlocks("Genesis.dat")
+        try :
+            head_blocks = TxBlock.loadBlocks("Genesis.dat")
+        except :
+            head_blocks = [None]
     server = SocketUtils.newServerConnection('localhost',5006)
     while not break_now :
         newBlock = SocketUtils.recvObj(server)
@@ -72,6 +75,7 @@ def walletServer(my_addr):
 
 def getBalance(pu_key):
     currentBlock = TxBlock.findLongestBlockchain(head_blocks)
+    if currentBlock == None : return 0.0
     return currentBlock.getBalance(pu_key)
 
 def sendCoins(pu_send, amt_send, pr_send, pu_recv, amt_recv):
@@ -147,8 +151,8 @@ if __name__ == "__main__" :
     time.sleep(60)
 
     #Save/Load all blocks
-    TxBlock.saveBlocks(head_blocks, "WalletBlocks.dat")
-    head_blocks = TxBlock.loadBlocks("WalletBlocks.dat")
+    #TxBlock.saveBlocks(head_blocks, "WalletBlocks.dat")
+    #head_blocks = TxBlock.loadBlocks("WalletBlocks.dat")
     
     #Query balances
     new1 = getBalance(pu1)
@@ -180,7 +184,7 @@ if __name__ == "__main__" :
     newnew1 = getBalance(pu1)
     print(newnew1)
     if (abs(newnew1 - new1 - 0.2) > 0.0000000001):
-        print("Error! Ducplicate Txs accepted.")
+        print("Error! Duplicate Txs accepted.")
     else:
         print("Success! Duplicate Txs rejected.")
             
@@ -201,5 +205,6 @@ if __name__ == "__main__" :
     t1.join()
     t2.join()
     t3.join()
-
+    t4.join()
+    
     print("Exit successful")
