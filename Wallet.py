@@ -8,7 +8,7 @@ import Signatures
 
 head_blocks = [None]
 wallets = [('localhost', 5006)]
-miners = [('localhost', 5005)]
+miners = [('localhost', 5005),('localhost', 5007)]
 break_now = False
 verbose = True
 my_private, my_public = Signatures.generate_keys()

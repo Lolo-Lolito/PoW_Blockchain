@@ -7,6 +7,8 @@ import pickle
 import copy
 
 wallet_list = [('localhost', 5006)]
+miner_list = [('localhost', 5005),('localhost', 5007)]
+
 tx_list = []
 head_blocks = [None]
 break_now = False
@@ -20,6 +22,7 @@ def StopAll() :
 def minerServer(my_addr):
     global tx_list
     global break_now
+    global head_blocks
     try :
         tx_list = loadTxList("Txs.dat")
         if verbose : print("Miner : Loaded tx_list has " + str(len(tx_list)) + " Txs.")
@@ -31,10 +34,51 @@ def minerServer(my_addr):
     server = SocketUtils.newServerConnection(my_ip, my_port)
     # Receive transactions
     while not break_now : 
-        newTx = SocketUtils.recvObj(server)
-        if isinstance(newTx, Transactions.Tx) and newTx.is_valid:
-            tx_list.append(newTx)
+        newObj = SocketUtils.recvObj(server)
+        if isinstance(newObj, Transactions.Tx) and newObj.is_valid:
+            tx_list.append(newObj)
             if verbose : print("Miner : Received tx \n")
+        if isinstance(newObj, TxBlock.TxBlock) :
+            if verbose : print("Miner : New block received !")
+            for tx in newObj.data :
+                try :
+                    tx_list.remove(tx)
+                except :
+                    pass
+            for b in head_blocks:
+                if b == None :
+                    if not newObj.is_valid():
+                        if verbose : print("Error! New block is invalid.")
+                    else :
+                        head_blocks.remove(b)
+                        head_blocks.append(newObj)
+                        found = True
+                        if verbose : print("Wallet : head blocks is empty, therefore newBlock is head block \n")             
+                elif newObj.previousHash == b.computeHash():
+                    newObj.previousBlock = b
+                    if not newObj.is_valid():
+                        if verbose : print("Error! New block is invalid.")
+                    else :
+                        found = True
+                        head_blocks.remove(b)
+                        head_blocks.append(newObj)
+                else :
+                    currentBlock = b
+                    while currentBlock != None :
+                        if newObj.previousHash == currentBlock.computeHash():
+                            newObj.previousBlock = currentBlock
+                            if not newObj.is_valid():
+                                if verbose : print("Error! New block is invalid.")
+                                break
+                            else :
+                                if not newObj in head_blocks :
+                                    if verbose : print("Wallet : New head block has been found.")
+                                    head_blocks.append(newObj)
+                                    found = True
+                                break
+                        currentBlock = currentBlock.previousBlock
+            if not found :
+                if verbose : print("Error! Could'nt find a parent for newBlock")
     if verbose : print("Miner : saving " + str(len(tx_list)) + " txs to Txs.dat")
     saveTxList(tx_list, "Txs.dat")
     return True
@@ -42,10 +86,11 @@ def minerServer(my_addr):
 def nonceFinder(wallet_list, my_public_addr):
     global break_now
     global tx_list
+    global head_blocks
     try :
         head_blocks = TxBlock.loadBlocks("AllBlocks.dat")
     except :
-        print("Miner : No previous blocks found. Starting fresh.")
+        if verbose : print("Miner : No previous blocks found. Starting fresh.")
         try :
             head_blocks = TxBlock.loadBlocks("Genesis.dat")
         except :
@@ -77,14 +122,20 @@ def nonceFinder(wallet_list, my_public_addr):
         Block.find_nonce(10000)
         if Block.good_nonce():
             if verbose : print("Miner : Good nonce has been found\n")
-            head_blocks.remove(Block.previousBlock)
-            head_blocks.append(Block)
+            try :
+                head_blocks.remove(Block.previousBlock)
+                head_blocks.append(Block)
+            except :
+                pass
             # Send that block to each in wallet list
             savPrev = Block.previousBlock
             Block.previousBlock = None
-            for addr_ip, port in wallet_list :
+            for addr_ip, port in wallet_list + miner_list :
                 if verbose : print("Miner : Sending to " + addr_ip + ":" + str(port) + "\n")
-                SocketUtils.sendObj(addr_ip, Block, port)
+                try :
+                    SocketUtils.sendObj(addr_ip, Block, port)
+                except :
+                    if verbose : print("Miner : Impossible to send to " + addr_ip + ":" + str(port) + "\n")
             Block.previousBlock = savPrev
             # Remove used txs from tx_list
             tx_list = [tx for tx in tx_list if not tx in Block.data]

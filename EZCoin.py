@@ -5,6 +5,7 @@ import Wallet
 import Miner
 import Signatures
 import threading
+import TxBlock
 
 wallets = [('localhost', 5006)]
 miners = [('localhost', 5005)]
@@ -59,7 +60,7 @@ def getBalance(pu_key) :
     return Wallet.getBalance(pu_key)
 
 def sendCoins(pu_recv, amt, tx_fee) :
-    Wallet.sendCoins(my_public, amt + tx_fee, my_private, pu_recv, amt, miners)
+    Wallet.sendCoins(my_public, amt + tx_fee, my_private, pu_recv, amt)
     return True
 
 def makeNewKeys() :
@@ -72,10 +73,15 @@ if __name__ == "__main__":
     time.sleep(2)
     print(getBalance(my_public))
     sendCoins(other_public, 1.0, 0.001)
-    time.sleep(30)
+    time.sleep(20)
     print(getBalance(other_public))
     print(getBalance(my_public))
 
     time.sleep(1)
     stopWallet()
     stopMiner()
+
+    print(TxBlock.findLongestBlockchain(Miner.head_blocks).nonce)
+    print(TxBlock.findLongestBlockchain(Miner.head_blocks).previousBlock.nonce)
+    print(TxBlock.findLongestBlockchain(Miner.head_blocks).previousBlock.previousBlock.nonce)
+    
